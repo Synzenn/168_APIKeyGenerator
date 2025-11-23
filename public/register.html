@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Admin</title>
+
+    <style>
+        /* Mengambil gaya dari index.html (Tema Hijau/Teal) */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        body {
+            margin: 0;
+            height: 100vh;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            /* Latar belakang hijau/teal gelap */
+            background: radial-gradient(circle at top, #153835, #001210);
+            color: #ffffff;
+        }
+
+        .card {
+            width: 360px;
+            padding: 35px 30px;
+            /* Warna card hijau/biru tua */
+            background: linear-gradient(180deg, #1f2a2a, #111a1a);
+            backdrop-filter: blur(10px);
+            border-radius: 14px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+            border: 1px solid #2e4a4a;
+            text-align: center;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            margin-bottom: 10px;
+            color: #d1fae5;
+            /* Bayangan teks hijau muda */
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+        }
+
+        input {
+            width: 90%;
+            padding: 13px;
+            margin-top: 14px auto 0;
+            border-radius: 10px;
+            /* Input field lebih gelap */
+            border: 1px solid #2e4a4a;
+            background: #111a1a;
+            color: #e0e0ff;
+            outline: none;
+            transition: 0.25s;
+        }
+
+        input:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.8);
+        }
+
+        button {
+            width: 50%;
+            padding: 13px;
+            margin-top: 18px;
+            border: none;
+            border-radius: 10px;
+            /* Gradient Hijau Teal */
+            background: linear-gradient(135deg, #10b981, #06b6d4);
+            cursor: pointer;
+            color: #ffffff;
+            font-size: 15px;
+            transition: 0.3s;
+            /* Bayangan Hijau/Teal */
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.9);
+        }
+
+        a {
+            color: #99f6e4; /* Warna link teal muda */
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        a:hover {
+            filter: brightness(1.2);
+        }
+
+        #msg {
+            margin-top: 12px;
+            min-height: 20px;
+            font-weight: bold;
+            color: #a7f3d0; /* Warna pesan hijau muda */
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="card">
+        <h2>Register Admin</h2>
+
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Password">
+
+        <button onclick="registerAdmin()">Register</button>
+
+        <p id="msg"></p>
+        <p>Sudah punya akun? <a href="/login">Login</a></p>
+    </div>
+
+    <script>
+        function registerAdmin() {
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value.trim();
+            const msg = document.getElementById("msg");
+
+            // Helper untuk pesan sukses/gagal
+            function showMessage(text, isSuccess) {
+                msg.style.color = isSuccess ? "#4ade80" : "#f87171"; // Hijau atau Merah
+                msg.innerText = text;
+            }
+
+            if (!email || !password) {
+                return showMessage("Email dan password wajib diisi!", false);
+            }
+
+            showMessage("Processing...", true);
+
+            fetch("/api/admin/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    const isSuccess = data.success; // Menggunakan properti success dari respons
+                    const message = data.message || (isSuccess ? "Registrasi berhasil! Silakan login." : "Gagal melakukan registrasi.");
+                    
+                    showMessage(message, isSuccess);
+
+                    if (isSuccess) {
+                        // Bersihkan field setelah berhasil
+                        document.getElementById("email").value = "";
+                        document.getElementById("password").value = "";
+                    }
+                })
+                .catch(() => {
+                    showMessage("Server error!", false);
+                });
+        }
+    </script>
+
+</body>
+
+</html>
