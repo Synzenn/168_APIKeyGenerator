@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <!-- Font Inter konsisten dengan file lain -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+        /* Mengambil gaya dari index.html (Tema Hijau/Teal) */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top, #153835, #001210);
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #d1fae5;
+            text-shadow: 0 0 20px rgba(16, 185, 129, 0.8);
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+            font-weight: 800;
+        }
+
+        h2 {
+            color: #4ade80;
+            text-shadow: 0 0 10px rgba(74, 222, 128, 0.4);
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            padding-top: 10px;
+        }
+
+        /* Container untuk layout 2 kolom */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 3fr 2fr; /* Rasio 3fr 2fr untuk User dan Admin List */
+            gap: 25px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Card */
+        .card {
+            background: linear-gradient(180deg, #1f2a2a, #111a1a);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            border: 1px solid #2e4a4a;
+            overflow: hidden; 
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+            background: #111a1a;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #2e4a4a;
+        }
+
+        th {
+            background: linear-gradient(135deg, #0e7490, #14b8a6);
+            color: #d1fae5;
+            padding: 12px;
+            text-align: left;
+            font-size: 0.85rem;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #2e4a4a;
+            color: #e0f2f1;
+            font-size: 0.9rem;
+        }
+        
+        /* Penyesuaian Lebar Kolom Header User (Kiri) */
+        #userTable th:nth-child(1) { width: 5%; } /* ID */
+        #userTable th:nth-child(2) { width: 15%; } /* Nama Lengkap */
+        #userTable th:nth-child(3) { width: 15%; } /* Email */
+        #userTable th:nth-child(4) { width: 25%; } /* API Key */
+        #userTable th:nth-child(5) { width: 15%; } /* Kadaluarsa */
+        #userTable th:nth-child(6) { width: 10%; } /* Status */
+        #userTable th:nth-child(7) { width: 15%; } /* Aksi */
+
+
+        tr:hover {
+            background: #1f2a2a;
+            transition: 0.2s;
+        }
+        
+        /* Logout Button */
+        .header-controls {
+            max-width: 1400px;
+            margin: 0 auto 20px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+            transition: 0.3s;
+            font-weight: 600;
+        }
+
+        .logout-btn:hover {
+            box-shadow: 0 0 25px rgba(239, 68, 68, 0.8);
+            transform: translateY(-1px);
+        }
+
+        /* Aksi Button */
+        .action-btn {
+            background: #ef4444; 
+            border: none;
+            padding: 6px 12px;
+            cursor: pointer;
+            color: #ffffff;
+            border-radius: 6px;
+            transition: 0.2s;
+            font-size: 0.8rem;
+        }
+
+        .action-btn:hover {
+            background: #dc2626;
+        }
+
+        /* Status */
+        .status-online {
+            color: #4ade80;
+            font-weight: bold;
+        }
+
+        .status-offline {
+            color: #f87171;
+            font-weight: bold;
+        }
+
+        /* Custom Alert */
+        .custom-alert {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .custom-alert.show { opacity: 1; }
+        .custom-alert.success { background-color: #10b981; color: white; }
+        .custom-alert.error { background-color: #ef4444; color: white; }
+
+        /* Media Queries for Responsiveness */
+        @media (max-width: 1024px) {
+            .dashboard-container {
+                grid-template-columns: 1fr; /* Kolom tunggal di layar kecil */
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="custom-alert" class="custom-alert"></div>
+
+    <h1>API Key & Admin Management Dashboard</h1>
+    
+    <div class="header-controls">
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- KOLOM 1: USER & API KEY LIST -->
+        <div class="card">
+            <h2>👤 User & API Key List</h2>
+            <div style="overflow-x: auto;">
+                <table id="userTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nama Lengkap</th>
+                            <th>Email</th>
+                            <th>API Key</th>
+                            <th>Kadaluarsa</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data User dimuat di sini -->
+                    </tbody>
+                </table>
+                <p id="user-loading-msg" style="text-align: center; margin-top: 15px;">Memuat data pengguna...</p>
+            </div>
+        </div>
+
+        <!-- KOLOM 2: ADMIN LIST -->
+        <div class="card">
+            <h2>💻 Admin List</h2>
+            <div style="overflow-x: auto;">
+                <table id="adminTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Terdaftar Sejak</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                         <!-- Data Admin dimuat di sini -->
+                    </tbody>
+                </table>
+                <p id="admin-loading-msg" style="text-align: center; margin-top: 15px;">Memuat data admin...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Custom Alert Implementation ---
+        const alertEl = document.getElementById('custom-alert');
+
+        function showCustomMessage(text, isSuccess = true) {
+            alertEl.textContent = text;
+            alertEl.className = 'custom-alert show ' + (isSuccess ? 'success' : 'error');
+            
+            setTimeout(() => {
+                alertEl.classList.remove('show');
+            }, 3000);
+        }
+
+        // --- Utility Functions ---
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            try {
+                 return new Date(dateString).toLocaleDateString('id-ID', options);
+            } catch (e) {
+                return dateString.split('T')[0];
+            }
+        }
+
+        function checkStatus(outOfDate) {
+            const today = new Date();
+            const expirationDate = new Date(outOfDate);
+            
+            if (expirationDate > today) {
+                return "<span class='status-online'>AKTIF</span>";
+            } else {
+                return "<span class='status-offline'>KADALUARSA</span>";
+            }
+        }
+        
+        // --- Fetch & Render Admin Data ---
+        async function loadAdminData() {
+            const adminTableBody = document.querySelector("#adminTable tbody");
+            const loadingMsg = document.getElementById('admin-loading-msg');
+            adminTableBody.innerHTML = '';
+            loadingMsg.style.display = 'block';
+
+            try {
+                const res = await fetch('/api/admin/list');
+                const data = await res.json();
+                loadingMsg.style.display = 'none';
+
+                if (data.success && data.data && data.data.length > 0) {
+                    data.data.forEach(admin => {
+                        const row = adminTableBody.insertRow();
+                        row.innerHTML = `
+                            <td>${admin.id}</td>
+                            <td>${admin.email}</td>
+                            <td>${formatDate(admin.created_at)}</td>
+                        `;
+                    });
+                } else {
+                    adminTableBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Tidak ada data Admin.</td></tr>';
+                }
+            } catch (err) {
+                loadingMsg.style.display = 'none';
+                showCustomMessage("Gagal memuat daftar admin.", false);
+            }
+        }
+
+        // --- Fetch & Render User Data (API Key) ---
+        async function loadDashboard() {
+            const userTableBody = document.querySelector("#userTable tbody");
+            const loadingMsg = document.getElementById('user-loading-msg');
+            userTableBody.innerHTML = '';
+            loadingMsg.style.display = 'block';
+
+            try {
+                const res = await fetch('/api/admin/dashboard');
+                const data = await res.json();
+                loadingMsg.style.display = 'none';
+
+                if (data.success && data.data && data.data.length > 0) {
+                    data.data.forEach(u => {
+                        userTableBody.innerHTML += `
+                            <tr>
+                                <td>${u.id}</td>
+                                <td>${u.first_name} ${u.last_name}</td>
+                                <td>${u.email}</td>
+                                <td style="font-size: 0.75rem; word-break: break-all;">${u.apikey || '-'}</td>
+                                <td>${formatDate(u.out_of_date)}</td>
+                                <td>${checkStatus(u.out_of_date)}</td>
+                                <td>
+                                    <button class="action-btn" onclick="confirmAndDeleteUser(${u.id})">Hapus</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                     userTableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Tidak ada data User API Key.</td></tr>';
+                }
+
+            } catch (err) {
+                loadingMsg.style.display = 'none';
+                showCustomMessage("Terjadi kesalahan saat memuat dashboard user.", false);
+            }
+        }
+
+        // --- Delete User Functions ---
+        function confirmAndDeleteUser(id) {
+            if (window.confirm(`Yakin ingin menghapus user dengan ID ${id} beserta API Key-nya? Proses ini TIDAK dapat dibatalkan.`)) {
+                deleteUser(id);
+            }
+        }
+
+        async function deleteUser(id) {
+            try {
+                const res = await fetch(`/api/admin/delete/${id}`, {
+                    method: "DELETE"
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showCustomMessage("User berhasil dihapus", true);
+                } else {
+                    showCustomMessage("Gagal menghapus user", false);
+                }
+                loadDashboard(); // Muat ulang data user setelah penghapusan
+            } catch (err) {
+                showCustomMessage("Gagal menghapus user (Server Error)", false);
+            }
+        }
+
+        function logout() {
+            window.location.href = "/login";
+        }
+
+        // Load semua data saat halaman dibuka
+        window.onload = function() {
+            loadDashboard();
+            loadAdminData();
+        };
+    </script>
+</body>
+
+</html>
